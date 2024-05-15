@@ -3,7 +3,7 @@ import tf2_ros as tf2
 
 from rclpy.duration import Duration
 from ipm_library.ipm import IPM
-from gyakuenki.gyakuenki.utils.projections import map_detected_objects
+from gyakuenki.utils.projections import map_detected_objects
 from ninshiki_interfaces.msg import DetectedObjects, Contours
 from gyakuenki_interfaces.msg import ProjectedObjects
 

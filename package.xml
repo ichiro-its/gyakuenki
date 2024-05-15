@@ -5,6 +5,7 @@
   <version>0.0.0</version>
   <description>Inverse Perspective Mapping package for soccer legacy code.</description>
   <maintainer email="hanunshaka02@gmail.com">Hanun Shaka</maintainer>
+  <license>MIT License</license>
 
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>ipm_library</exec_depend>
