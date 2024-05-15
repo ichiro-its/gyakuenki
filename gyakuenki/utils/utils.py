@@ -6,14 +6,16 @@ def create_horizontal_plane(
     height_offset: float = 0.0) -> Plane:
   """Create a plane message for a given frame at a given time, with a given height offset."""
   plane = Plane()
-  plane.coef[2] = 1.0  # Normal in z direction
-  plane.coef[3] = -height_offset  # Distance above the ground
+  plane.coef[2] = 1.0
+  plane.coef[3] = -height_offset
   return plane
 
 def get_object_center(
     object: DetectedObject,
     detection_type: str) -> Point2D:
   """Get the center of a detected object."""
+  print("Getting center")
+  print(detection_type)
 
   if detection_type == 'dnn':
     x = (object.right - object.left) / 2

@@ -14,24 +14,22 @@ class GyakuenkiNode:
     self.time_stamp = self.node.get_clock().now()
 
     # Parameters
-    self.declare_parameter('gaze_frame', 'gaze')
-    self.declare_parameter('base_footprint_frame', 'base_footprint')
-    self.declare_parameter('detection_topic_dnn', 'ninshiki_cpp/dnn_detection')
-    self.declare_parameter('detection_topic_color', 'ninshiki_cpp/color_detection')
+    self.node.declare_parameter('gaze_frame', 'gaze')
+    self.node.declare_parameter('base_footprint_frame', 'base_footprint')
+    self.node.declare_parameter('detection_topic_dnn', 'ninshiki_cpp/dnn_detection')
+    self.node.declare_parameter('detection_topic_color', 'ninshiki_cpp/color_detection')
 
     # Subscribers and Publishers
-    self.dnn_objects_subscriber = self.node.create_subscription(DetectedObjects, self.get_parameter('detection_topic_dnn').value, self.dnn_detection_callback, 10)
-    self.color_objects_subscriber = self.node.create_subscription(Contours, self.get_parameter('detection_topic_color').value, self.color_detection_callback, 10)
+    self.dnn_objects_subscriber = self.node.create_subscription(DetectedObjects, self.node.get_parameter('detection_topic_dnn').value, self.dnn_detection_callback, 10)
+    self.color_objects_subscriber = self.node.create_subscription(Contours, self.node.get_parameter('detection_topic_color').value, self.color_detection_callback, 10)
     self.projected_objects_publisher = self.node.create_publisher(ProjectedObjects, 'projected_objects', 10)  # TODO: determine published data
-
-    self.get_logger().info('Subscribed to ' + self.get_parameter('detection_topic').value)
 
     # TF2
     self.tf_buffer = tf2.Buffer(cache_time=Duration(seconds=30.0))
     self.tf_listener = tf2.TransformListener(self.tf_buffer, self.node)
 
     # Create the IPM instance
-    self.ipm = IPM()
+    self.ipm = IPM(self.tf_buffer)
 
   # Pipelines
   # Callback for dnn detection subscriber
@@ -39,30 +37,30 @@ class GyakuenkiNode:
     detection_type = 'dnn'
 
     projected_dnn_objects = map_detected_objects(
-      msg,
+      msg.detected_objects,
       detection_type,
       self.time_stamp,
       self.ipm,
-      self.get_parameter('base_footprint_frame').value,
-      self.get_parameter('gaze_frame').value,
-      self.get_logger())
+      self.node.get_parameter('base_footprint_frame').value,
+      self.node.get_parameter('gaze_frame').value,
+      self.node.get_logger())
     
-    self.projected_objects.extend(projected_dnn_objects)
+    # self.projected_objects.append(projected_dnn_objects)
 
   # Callback for color detection subscriber
   def color_detection_callback(self, msg: Contours):
     detection_type = 'color'
 
-    projected_color_objects = map_detected_objects(
-      msg,
-      detection_type,
-      self.time_stamp,
-      self.ipm,
-      self.get_parameter('base_footprint_frame').value,
-      self.get_parameter('gaze_frame').value,
-      self.get_logger())
+    # projected_color_objects = map_detected_objects(
+    #   msg.contours,
+    #   detection_type,
+    #   self.time_stamp,
+    #   self.ipm,
+    #   self.node.get_parameter('base_footprint_frame').value,
+    #   self.node.get_parameter('gaze_frame').value,
+    #   self.node.get_logger())
     
-    self.projected_objects.extend(projected_color_objects)
+    # self.projected_objects.append(projected_color_objects)
 
   # Publishes the projected objects
   def publish_projected_objects(self):
