@@ -21,16 +21,16 @@ def load_configuration(config_path: str) -> dict:
   distortion_coefficients = intrinsic_parameters["distortion_coefficients"]
 
   k = [
-      focal_length[0], 0, principal_point[0],
-      0, focal_length[1], principal_point[1],
+      focal_length['x'], 0, principal_point['x'],
+      0, focal_length['y'], principal_point['y'],
       0, 0, 1
   ]
 
-  d = distortion_coefficients
+  d = [distortion_coefficients['k1'], distortion_coefficients['k2'], distortion_coefficients['t1'], distortion_coefficients['t2'], distortion_coefficients['k3']]
 
   p = [
-      focal_length[0], 0, principal_point[0], 0,
-      0, focal_length[1], principal_point[1], 0,
+      focal_length['x'], 0, principal_point['x'], 0,
+      0, focal_length['y'], principal_point['y'], 0,
       0, 0, 1, 0
   ]
 
@@ -72,12 +72,18 @@ def create_horizontal_plane(
 def get_object_center(
         object: DetectedObject,
         detection_type: str) -> Point2D:
-  print("Getting center")
-  print(detection_type)
+  
+  print('Object')
+  print(object)
 
   if detection_type == 'dnn':
     x = (object.right - object.left) / 2
     y = (object.bottom - object.top) / 2
+    print(f'Object right: {object.right}')
+    print(f'Object left: {object.left}')
+    print(f'Object bottom: {object.bottom}')
+    print(f'Object top: {object.top}')
+    print(f'x: {x} and y: {y}')
   else:
     contour = object.contour
 
