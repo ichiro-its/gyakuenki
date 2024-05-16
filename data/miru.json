@@ -1,0 +1,24 @@
+{
+  "image_size": {
+    "width": 6720,
+    "height": 4480
+  },
+  "distortion_model": "plumb_bob",
+  "intrinsic_parameters": {
+    "focal_length": {
+      "x": 4000,
+      "y": 4000
+    },
+    "principal_point": {
+      "x": 3360,
+      "y": 2240
+    },
+    "distortion_coefficients": {
+      "k1": -0.15,
+      "k2": 0.05,
+      "t1": 0.0,
+      "t2": 0.0,
+      "k3": 0.0
+    }
+  }
+}

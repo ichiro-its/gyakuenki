@@ -3,6 +3,7 @@ import tf2_ros as tf2
 
 from rclpy.duration import Duration
 from ipm_library.ipm import IPM
+from gyakuenki.utils.utils import load_configuration, get_camera_info
 from gyakuenki.utils.projections import map_detected_objects
 from ninshiki_interfaces.msg import DetectedObjects, Contours
 from gyakuenki_interfaces.msg import ProjectedObjects
@@ -12,6 +13,8 @@ class GyakuenkiNode:
     self.node = node
     self.projected_objects = []
     self.time_stamp = self.node.get_clock().now()
+    self.config = load_configuration(
+        "~/ros2-ws-cp/src/gyakuenki/data/miru.json")
 
     # Parameters
     self.node.declare_parameter('gaze_frame', 'gaze')
@@ -29,7 +32,7 @@ class GyakuenkiNode:
     self.tf_listener = tf2.TransformListener(self.tf_buffer, self.node)
 
     # Create the IPM instance
-    self.ipm = IPM(self.tf_buffer)
+    self.ipm = IPM(self.tf_buffer, camera_info=get_camera_info(self.config))
 
   # Pipelines
   # Callback for dnn detection subscriber

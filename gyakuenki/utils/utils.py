@@ -1,19 +1,77 @@
+from sensor_msgs.msg import CameraInfo
 from ninshiki_interfaces.msg import DetectedObject
 from shape_msgs.msg import Plane
 from vision_msgs.msg import Point2D
+import json
+
+
+def load_configuration(config_path: str) -> dict:
+  with open(config_path, 'r') as f:
+      data = json.load(f)
+
+  image_size = data["image_size"]
+  distortion_model = data["distortion_model"]
+  intrinsic_parameters = data["intrinsic_parameters"]
+
+  width = image_size["width"]
+  height = image_size["height"]
+
+  focal_length = intrinsic_parameters["focal_length"]
+  principal_point = intrinsic_parameters["principal_point"]
+  distortion_coefficients = intrinsic_parameters["distortion_coefficients"]
+
+  k = [
+      focal_length[0], 0, principal_point[0],
+      0, focal_length[1], principal_point[1],
+      0, 0, 1
+  ]
+
+  d = distortion_coefficients
+
+  p = [
+      focal_length[0], 0, principal_point[0], 0,
+      0, focal_length[1], principal_point[1], 0,
+      0, 0, 1, 0
+  ]
+
+  parameters = {
+      "width": width,
+      "height": height,
+      "distortion_model": distortion_model,
+      "focal_length": focal_length,
+      "principal_point": principal_point,
+      "d": d,
+      "k": k,
+      "p": p
+  }
+
+  return parameters
+
+
+def get_camera_info(config: dict) -> CameraInfo:
+    camera_info = CameraInfo()
+    camera_info.header.frame_id = "gaze"
+    camera_info.width = config["width"]
+    camera_info.height = config["height"]
+    camera_info.distortion_model = config["distortion_model"]
+    camera_info.d = config["d"]
+    camera_info.k = config["k"]
+    camera_info.p = config["p"]
+    camera_info.binning_x = 0
+    camera_info.binning_y = 0
+
+    return camera_info
 
 def create_horizontal_plane(
-    height_offset: float = 0.0) -> Plane:
-  """Create a plane message for a given frame at a given time, with a given height offset."""
+        height_offset: float = 0.0) -> Plane:
   plane = Plane()
   plane.coef[2] = 1.0
   plane.coef[3] = -height_offset
   return plane
 
 def get_object_center(
-    object: DetectedObject,
-    detection_type: str) -> Point2D:
-  """Get the center of a detected object."""
+        object: DetectedObject,
+        detection_type: str) -> Point2D:
   print("Getting center")
   print(detection_type)
 

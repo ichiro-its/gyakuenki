@@ -14,17 +14,6 @@ def map_detected_objects(
         base_footprint_frame: str,
         gaze_frame: str,
         logger: RcutilsLogger) -> ProjectedObjects:
-    """
-    Map a given array of 2D ball detections onto the ground plane.
-
-    :param detected_objects: The 2D message that should be mapped
-    :param ipm: An instance of the IPM mapping utility
-    :param base_footprint: The tf frame of the field
-    :param gaze_frame: The tf frame of the gaze
-    :param logger: A ros logger to display warnings etc.
-    :param ball_diameter: The diameter of the balls that are mapped
-    :returns: The balls as 3D cartesian detections in the output_frame
-    """
     object_relative = ProjectedObject()
     objects_relative = ProjectedObjects()
 
@@ -43,8 +32,7 @@ def map_detected_objects(
                 elevated_field,
                 object_center,
                 time_stamp,
-                base_footprint_frame,
-                gaze_frame,
+                plane_frame_id=base_footprint_frame,
             )
 
             object_relative.center.x = transformed_object.point.x
