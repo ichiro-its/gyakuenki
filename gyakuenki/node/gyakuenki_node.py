@@ -2,9 +2,9 @@ import rclpy
 import tf2_ros as tf2
 
 from rclpy.duration import Duration
-from ipm_library.ipm import IPM
+from gyakuenki.projections.ipm import IPM
 from gyakuenki.utils.utils import load_configuration, get_camera_info
-from gyakuenki.utils.projections import map_detected_objects
+from gyakuenki.projections.projections import map_detected_objects
 from ninshiki_interfaces.msg import DetectedObjects, Contours
 from gyakuenki_interfaces.msg import ProjectedObjects
 
@@ -12,9 +12,8 @@ class GyakuenkiNode:
   def __init__(self, node: rclpy.node.Node):
     self.node = node
     self.projected_objects = []
-    self.time_stamp = self.node.get_clock().now()
     self.config = load_configuration(
-        "~/ros2-ws-cp/src/gyakuenki/data/miru.json")
+        "/home/ichiro/ros2-ws-cp/src/gyakuenki/data/miru.json")
 
     # Parameters
     self.node.declare_parameter('gaze_frame', 'gaze')
@@ -38,30 +37,30 @@ class GyakuenkiNode:
   # Callback for dnn detection subscriber
   def dnn_detection_callback(self, msg: DetectedObjects):
     detection_type = 'dnn'
+    now = self.node.get_clock().now()
 
     projected_dnn_objects = map_detected_objects(
       msg.detected_objects,
       detection_type,
-      self.time_stamp,
+      now,
       self.ipm,
       self.node.get_parameter('base_footprint_frame').value,
-      self.node.get_parameter('gaze_frame').value,
-      self.node.get_logger())
+      self.node.get_parameter('gaze_frame').value)
     
     # self.projected_objects.append(projected_dnn_objects)
 
   # Callback for color detection subscriber
   def color_detection_callback(self, msg: Contours):
     detection_type = 'color'
+    now = self.node.get_clock().now()
 
     # projected_color_objects = map_detected_objects(
     #   msg.contours,
     #   detection_type,
-    #   self.time_stamp,
+    #   now,
     #   self.ipm,
     #   self.node.get_parameter('base_footprint_frame').value,
-    #   self.node.get_parameter('gaze_frame').value,
-    #   self.node.get_logger())
+    #   self.node.get_parameter('gaze_frame').value)
     
     # self.projected_objects.append(projected_color_objects)
 
