@@ -32,14 +32,12 @@ class IPM:
       self,
       plane: Plane,
       point: Point2D,
-      time: Time,
       plane_frame_id: Optional[str] = None,
       output_frame_id: Optional[str] = None) -> PointStamped:
     # Create numpy array from point and call map_points()
     header, np_points = self.map_points(
       plane,
       np.array([[point.x, point.y]]),
-      time,
       plane_frame_id,
       output_frame_id)
     np_point = np_points[0]
@@ -61,7 +59,6 @@ class IPM:
       self,
       plane_msg: Plane,
       points: np.ndarray,
-      time: Time,
       plane_frame_id: Optional[str] = None,
       output_frame_id: Optional[str] = None) -> Tuple[Header, np.ndarray]:
     if not np.any(plane_msg.coef[:3]):
@@ -77,7 +74,6 @@ class IPM:
       plane=plane,
       input_frame=plane_frame_id,
       output_frame=self._camera_info.header.frame_id,
-      time=time,
       buffer=self._tf_buffer)
 
     # Convert points to float if they aren't allready
@@ -93,17 +89,16 @@ class IPM:
       use_distortion=self._distortion)
 
     # Transform output point if output frame if needed
+    latest_time = self._tf_buffer.get_latest_common_time(output_frame_id, self._camera_info.header.frame_id)
     if output_frame_id not in [None, self._camera_info.header.frame_id]:
       output_transformation = self._tf_buffer.lookup_transform(
         output_frame_id,
         self._camera_info.header.frame_id,
-        time,
-        '100')
+        latest_time)
       np_points = utils.transform_points(
         np_points, output_transformation.transform)
 
     # Create header
-    header = Header(frame_id=output_frame_id, stamp=time)
-    print(np_points)
+    header = Header(frame_id=output_frame_id, stamp=latest_time)
 
     return (header, np_points)
