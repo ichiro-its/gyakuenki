@@ -72,13 +72,6 @@ def get_camera_info(config: dict) -> CameraInfo:
 
   return camera_info
 
-def create_horizontal_plane(
-    height_offset: float = 0.0) -> Plane:
-  plane = Plane()
-  plane.coef[2] = 1.0
-  plane.coef[3] = -height_offset
-  return plane
-
 def get_object_center(
     object: DetectedObject,
     detection_type: str) -> Point2D:

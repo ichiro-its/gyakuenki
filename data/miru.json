@@ -1,24 +1,24 @@
 {
   "image_size": {
-    "width": 6720,
-    "height": 4480
+    "width": 320,
+    "height": 240
   },
   "distortion_model": "plumb_bob",
   "intrinsic_parameters": {
     "focal_length": {
-      "x": 4000,
-      "y": 4000
+      "x": 753.19053155,
+      "y": 754.54982695
     },
     "principal_point": {
-      "x": 3360,
-      "y": 2240
+      "x": 642.54901006,
+      "y": 351.40435398
     },
     "distortion_coefficients": {
-      "k1": -0.15,
-      "k2": 0.05,
-      "t1": 0.0,
-      "t2": 0.0,
-      "k3": 0.0
+      "k1": 0.02023015,
+      "k2": 0.19101788,
+      "t1": -0.00716257,
+      "t2": 0.00580234,
+      "k3": -0.57196819
     }
   }
 }

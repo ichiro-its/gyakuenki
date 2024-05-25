@@ -2,6 +2,7 @@ from typing import Optional, Tuple
 from builtin_interfaces.msg import Time
 from gyakuenki.utils import utils
 import numpy as np
+import rclpy
 from builtin_interfaces.msg import Time
 from sensor_msgs.msg import CameraInfo
 from rclpy.duration import Duration
@@ -10,19 +11,21 @@ from std_msgs.msg import Header
 from tf2_geometry_msgs import PointStamped
 import tf2_ros
 from vision_msgs.msg import Point2D
-from gyakuenki.utils.exceptions import CameraInfoNotSetException, InvalidPlaneException, NoIntersectionError
 
 class IPM:
   _camera_info: Optional[CameraInfo] = None
+  _node: Optional[rclpy.node.Node] = None
 
   def __init__(
       self,
       tf_buffer: tf2_ros.Buffer,
       camera_info: Optional[CameraInfo] = None,
+      node: Optional[rclpy.node.Node] = None,
       distortion: bool = False) -> None:
     # TF needs a listener that is init in the node context, so we need a reference
     self._tf_buffer = tf_buffer
     self.set_camera_info(camera_info)
+    self._node = node
     self._distortion = distortion
 
   def set_camera_info(self, camera_info: CameraInfo) -> None:
@@ -44,7 +47,8 @@ class IPM:
 
     # Check if we have any nan values, aka if we have a valid intersection
     if np.isnan(np_point).any():
-      raise NoIntersectionError
+      self._node.get_logger().error('No intersection : np_point contains NaN values')
+      return None
 
     # Create output point
     intersection_stamped = PointStamped()
@@ -62,7 +66,8 @@ class IPM:
       plane_frame_id: Optional[str] = None,
       output_frame_id: Optional[str] = None) -> Tuple[Header, np.ndarray]:
     if not np.any(plane_msg.coef[:3]):
-      raise InvalidPlaneException
+      self._node.get_logger().error('Invalid plane : Plane not valid')
+      return None
 
     assert points.shape[1] == 2, 'Points must be in the form of a nx2 numpy array'
 

@@ -17,18 +17,18 @@ def map_detected_objects(
 
   for detected_object in detected_objects:
     if detection_type == 'dnn':
-      if detected_object.score < 0.5:
+      if detected_object.score < 0.4:
         continue
       
       if detected_object.label == 'ball': # TODO: check ball diameter
-        object_diameter = 0.153
+        object_diameter = 13.5
       elif detected_object.label == 'marking': # TODO: check marking label
         object_diameter = 0.0
       else:
         continue
     else:
       if detected_object.name == 'ball': # TODO: check ball diameter
-        object_diameter = 0.153
+        object_diameter = 13.5
       elif detected_object.name == 'marking': # TODO: check marking label
         object_diameter = 0.0
       else:
@@ -43,6 +43,9 @@ def map_detected_objects(
       plane_frame_id=base_footprint_frame,
       output_frame_id=base_footprint_frame
     )
+
+    if transformed_object is None:
+      return None
 
     object_relative.center.x = transformed_object.point.x
     object_relative.center.y = transformed_object.point.y

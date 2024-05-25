@@ -31,7 +31,7 @@ class GyakuenkiNode:
     self.tf_listener = tf2.TransformListener(self.tf_buffer, self.node)
 
     # Create the IPM instance
-    self.ipm = IPM(self.tf_buffer, camera_info=get_camera_info(self.config))
+    self.ipm = IPM(self.tf_buffer, camera_info=get_camera_info(self.config), node=self.node)
 
   # Pipelines
   # Callback for dnn detection subscriber
@@ -42,8 +42,12 @@ class GyakuenkiNode:
       self.ipm,
       self.node.get_parameter('base_footprint_frame').value,
       self.node.get_parameter('gaze_frame').value)
+    
+    print("DNN PROJECTION")
+    print(projected_dnn_objects)
 
-    self.projected_objects.extend(projected_dnn_objects)
+    if projected_dnn_objects is not None:
+      self.projected_objects.extend(projected_dnn_objects)
 
   # Callback for color detection subscriber
   def color_detection_callback(self, msg: Contours):
@@ -53,8 +57,12 @@ class GyakuenkiNode:
       self.ipm,
       self.node.get_parameter('base_footprint_frame').value,
       self.node.get_parameter('gaze_frame').value)
+
+    print("Color PROJECTION")
+    print(projected_color_objects)
     
-    self.projected_objects.extend(projected_color_objects)
+    if projected_color_objects is not None:
+      self.projected_objects.extend(projected_color_objects)
 
   # Publishes the projected objects
   def publish_projected_objects(self):
