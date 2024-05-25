@@ -14,8 +14,6 @@ import cv2
 
 
 def load_configuration(config_path: str) -> dict:
-  # TODO: calibrate camera and check result
-
   with open(config_path, 'r') as f:
     data = json.load(f)
 
@@ -57,10 +55,9 @@ def load_configuration(config_path: str) -> dict:
 
   return parameters
 
-
-def get_camera_info(config: dict) -> CameraInfo:
+def get_camera_info(config: dict, gaze_frame: str) -> CameraInfo:
   camera_info = CameraInfo()
-  camera_info.header.frame_id = "gaze"
+  camera_info.header.frame_id = gaze_frame
   camera_info.width = config["width"]
   camera_info.height = config["height"]
   camera_info.distortion_model = config["distortion_model"]
@@ -78,7 +75,10 @@ def get_object_center(
   
   if detection_type == 'dnn':
     x = (object.right - object.left) / 2
-    y = (object.bottom - object.top) / 2
+    if detected_object.label == 'goalpost':
+      y = object.bottom
+    else:
+      y = (object.bottom - object.top) / 2
   else:
     contour = object.contour
 
@@ -144,7 +144,6 @@ def transform_plane_to_frame(
   field_normal = field_point - field_normal
   return field_point, field_normal
 
-
 def get_field_intersection_for_pixels(
       camera_info: CameraInfo,
       points: np.ndarray,
@@ -176,7 +175,6 @@ def get_field_intersection_for_pixels(
     plane_normal, plane_base_point, ray_directions)
 
   return intersections
-
 
 def line_plane_intersections(
       plane_normal: np.ndarray,
@@ -221,7 +219,6 @@ def transform_points(point_cloud: np.ndarray, transform: Transform) -> np.ndarra
     transform_rotation_matrix,
     point_cloud) + transform_translation
 
-
 def _get_mat_from_quat(quaternion: np.ndarray) -> np.ndarray:
   Nq = np.sum(np.square(quaternion))
   if Nq < np.finfo(np.float64).eps:
@@ -237,7 +234,6 @@ def _get_mat_from_quat(quaternion: np.ndarray) -> np.ndarray:
     [[1.0-(yYZ[0]+zZ), xXYZ[1]-wXYZ[2], xXYZ[2]+wXYZ[1]],
       [xXYZ[1]+wXYZ[2], 1.0-(xXYZ[0]+zZ), yYZ[1]-wXYZ[0]],
       [xXYZ[2]-wXYZ[1], yYZ[1]+wXYZ[0], 1.0-(xXYZ[0]+yYZ[0])]])
-
 
 def create_horizontal_plane(
         height_offset: float = 0.0) -> Plane:

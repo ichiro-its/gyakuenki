@@ -3,8 +3,17 @@ from rclpy.impl.rcutils_logger import RcutilsLogger
 from ninshiki_interfaces.msg import DetectedObject, DetectedObjects, Contours, Contour
 from builtin_interfaces.msg import Time
 from rclpy.impl.rcutils_logger import RcutilsLogger
-from gyakuenki.utils.utils import create_horizontal_plane, get_object_center
+from gyakuenki.utils import utils
 from gyakuenki_interfaces.msg import ProjectedObject, ProjectedObjects
+
+object_diameter_dict = {
+  # TODO : check diameters for field features
+  'ball' : 13.5,
+  'goalpost' : 1,
+  'L-Intersection' : 1,
+  'T-Intersection' : 1,
+  'X-Intersection' : 1
+}
 
 def map_detected_objects(
     detected_objects: list,
@@ -19,23 +28,16 @@ def map_detected_objects(
     if detection_type == 'dnn':
       if detected_object.score < 0.4:
         continue
-      
-      if detected_object.label == 'ball': # TODO: check ball diameter
-        object_diameter = 13.5
-      elif detected_object.label == 'marking': # TODO: check marking label
-        object_diameter = 0.0
-      else:
+      if detected_object.label not in object_diameter_dict:
         continue
+      object_diameter = object_diameter_dict[detected_object.label]
     else:
-      if detected_object.name == 'ball': # TODO: check ball diameter
-        object_diameter = 13.5
-      elif detected_object.name == 'marking': # TODO: check marking label
-        object_diameter = 0.0
-      else:
+      if detected_object.name not in object_diameter_dict:
         continue
+      object_diameter = object_diameter_dict[detected_object.name]
 
-    object_center = get_object_center(detected_object, detection_type)
-    elevated_field = create_horizontal_plane(object_diameter / 2)
+    object_center = utils.get_object_center(detected_object, detection_type)
+    elevated_field = utils.create_horizontal_plane(object_diameter / 2)
 
     transformed_object = ipm.map_point(
       elevated_field,
@@ -45,7 +47,7 @@ def map_detected_objects(
     )
 
     if transformed_object is None:
-      return None
+      continue
 
     object_relative.center.x = transformed_object.point.x
     object_relative.center.y = transformed_object.point.y
