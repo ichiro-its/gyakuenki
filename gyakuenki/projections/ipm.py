@@ -22,7 +22,6 @@ class IPM:
       camera_info: Optional[CameraInfo] = None,
       node: Optional[rclpy.node.Node] = None,
       distortion: bool = False) -> None:
-    # TF needs a listener that is init in the node context, so we need a reference
     self._tf_buffer = tf_buffer
     self.set_camera_info(camera_info)
     self._node = node
@@ -37,7 +36,6 @@ class IPM:
       point: Point2D,
       plane_frame_id: Optional[str] = None,
       output_frame_id: Optional[str] = None) -> PointStamped:
-    # Create numpy array from point and call map_points()
     header, np_points = self.map_points(
       plane,
       np.array([[point.x, point.y]]),
@@ -45,12 +43,10 @@ class IPM:
       output_frame_id)
     np_point = np_points[0]
 
-    # Check if we have any nan values, aka if we have a valid intersection
     if np.isnan(np_point).any():
       self._node.get_logger().error('No intersection : np_point contains NaN values')
       return None
 
-    # Create output point
     intersection_stamped = PointStamped()
     intersection_stamped.point.x = np_point[0]
     intersection_stamped.point.y = np_point[1]
@@ -71,21 +67,17 @@ class IPM:
 
     assert points.shape[1] == 2, 'Points must be in the form of a nx2 numpy array'
 
-    # Convert plane from general form to point normal form
     plane = utils.plane_general_to_point_normal(plane_msg)
 
-    # View plane from camera frame
     plane_base_point, plane_normal = utils.transform_plane_to_frame(
       plane=plane,
       input_frame=plane_frame_id,
       output_frame=self._camera_info.header.frame_id,
       buffer=self._tf_buffer)
 
-    # Convert points to float if they aren't allready
     if points.dtype.char not in np.typecodes['AllFloat']:
       points = points.astype(np.float32)
 
-    # Get intersection points with plane
     np_points = utils.get_field_intersection_for_pixels(
       self._camera_info,
       points,
@@ -93,8 +85,11 @@ class IPM:
       plane_base_point,
       use_distortion=self._distortion)
 
-    # Transform output point if output frame if needed
-    latest_time = self._tf_buffer.get_latest_common_time(output_frame_id, self._camera_info.header.frame_id)
+    try:
+      latest_time = self._tf_buffer.get_latest_common_time(output_frame_id, self._camera_info.header.frame_id)
+    except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+      return None
+
     if output_frame_id not in [None, self._camera_info.header.frame_id]:
       output_transformation = self._tf_buffer.lookup_transform(
         output_frame_id,
@@ -103,7 +98,6 @@ class IPM:
       np_points = utils.transform_points(
         np_points, output_transformation.transform)
 
-    # Create header
     header = Header(frame_id=output_frame_id, stamp=latest_time)
 
     return (header, np_points)

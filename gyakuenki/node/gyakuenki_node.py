@@ -28,7 +28,7 @@ class GyakuenkiNode:
     self.tf_buffer = tf2.Buffer(cache_time=Duration(seconds=30.0))
     self.tf_listener = tf2.TransformListener(self.tf_buffer, self.node)
 
-    self.ipm = IPM(self.tf_buffer, camera_info=utils.get_camera_info(self.config, self.node.get_parameter('gaze_frame')), node=self.node)
+    self.ipm = IPM(self.tf_buffer, camera_info=utils.get_camera_info(self.config, self.node.get_parameter('gaze_frame').value), node=self.node)
 
   def dnn_detection_callback(self, msg: DetectedObjects):
     projected_objects = map_detected_objects(
@@ -41,7 +41,7 @@ class GyakuenkiNode:
     print("DNN PROJECTION")
     print(projected_objects)
 
-    self.projected_dnn_publisher.publish(projected_objects)    
+    self.projected_dnn_publisher.publish(projected_objects)
 
   # Callback for color detection subscriber
   def color_detection_callback(self, msg: Contours):

@@ -21,8 +21,8 @@ def map_detected_objects(
     ipm: IPM,
     base_footprint_frame: str,
     gaze_frame: str) -> ProjectedObjects:
+  objects_relative = ProjectedObjects()
   object_relative = ProjectedObject()
-  objects_relative = []
 
   for detected_object in detected_objects:
     if detection_type == 'dnn':
@@ -60,7 +60,7 @@ def map_detected_objects(
       object_relative.label = detected_object.name
       object_relative.confidence = 1
 
-    objects_relative.append(object_relative)
+    objects_relative.projected_objects.append(object_relative)
 
   return objects_relative
 
