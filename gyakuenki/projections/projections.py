@@ -1,6 +1,6 @@
 from gyakuenki.projections.ipm import IPM
 from gyakuenki.utils import utils
-from gyakuenki_interfaces.msg import ProjectedObject, ProjectedObjects
+from gyakuenki_interfaces.msg import ProjectedObject, ProjectedObjects, Confidence
 from ninshiki_interfaces.msg import DetectedObject, DetectedObjects, Contours, Contour
 from rclpy.impl.rcutils_logger import RcutilsLogger
 
@@ -32,7 +32,7 @@ def map_detected_objects(
         else:
             if detected_object.name not in object_diameter_dict:
                 continue
-        object_diameter = object_diameter_dict[detected_object.name]
+            object_diameter = object_diameter_dict[detected_object.name]
 
         object_center = utils.get_object_center(detected_object, detection_type)
         elevated_field = utils.create_horizontal_plane(object_diameter / 2)
@@ -52,10 +52,10 @@ def map_detected_objects(
 
         if detection_type == 'dnn':
             object_relative.label = detected_object.label
-            object_relative.confidence = detected_object.score
+            object_relative.confidence.confidence = detected_object.score
         else:
             object_relative.label = detected_object.name
-            object_relative.confidence = 1
+            object_relative.confidence.confidence = 1.0
 
         objects_relative.projected_objects.append(object_relative)
 

@@ -38,7 +38,7 @@ class GyakuenkiNode:
             self.node.get_parameter('gaze_frame').value)
         
         print("DNN PROJECTION")
-        print(projected_objects)
+        # print(projected_objects)
 
         self.projected_dnn_publisher.publish(projected_objects)
 

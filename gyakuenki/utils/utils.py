@@ -69,17 +69,17 @@ def get_camera_info(config: dict, gaze_frame: str) -> CameraInfo:
     return camera_info
 
 def get_object_center(
-        object: DetectedObject,
+        detected_object: DetectedObject,
         detection_type: str) -> Point2D:
     
     if detection_type == 'dnn':
-        x = (object.right - object.left) / 2
+        x = (detected_object.right - detected_object.left) / 2
         if detected_object.label == 'goalpost':
-            y = object.bottom
+            y = detected_object.bottom
         else:
-            y = (object.bottom - object.top) / 2
+            y = (detected_object.bottom - detected_object.top) / 2
     else:
-        contour = object.contour
+        contour = detected_object.contour
 
         min_x = min(contour, key=lambda p: p.x).x
         max_x = max(contour, key=lambda p: p.x).x
