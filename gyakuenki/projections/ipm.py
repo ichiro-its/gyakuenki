@@ -10,6 +10,7 @@ from rclpy.duration import Duration
 from tf2_geometry_msgs import PointStamped
 from typing import Optional, Tuple
 from vision_msgs.msg import Point2D
+from rclpy.time import Time
 
 class IPM:
     _camera_info: Optional[CameraInfo] = None
@@ -28,6 +29,25 @@ class IPM:
 
     def set_camera_info(self, camera_info: CameraInfo) -> None:
         self._camera_info = camera_info
+
+    def wait_for_frame(tf_buffer, target_frame, source_frame, timeout=10.0):
+        start_time = Time.now()
+        latest_time = None
+
+        while (Time.now() - start_time).to_sec() < timeout:
+            try:
+                latest_time = tf_buffer.get_latest_common_time(
+                    target_frame, source_frame)
+                return latest_time
+            except tf2_ros.LookupException:
+                print(f"Frame '{target_frame}' not found. Retrying...")
+            except (tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+                print(f"Error while waiting for frame: {e}")
+                return None
+
+        print(
+            f"Timeout: Frame '{target_frame}' not available after {timeout} seconds.")
+        return None
 
     def map_point(
             self,
@@ -84,10 +104,16 @@ class IPM:
             plane_base_point,
             use_distortion=self._distortion)
 
-        try:
-            latest_time = self._tf_buffer.get_latest_common_time(output_frame_id, self._camera_info.header.frame_id)
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+        latest_time = self.wait_for_frame(
+            self._tf_buffer, output_frame_id, self._camera_info.header.frame_id)
+        if latest_time is None:
             return None
+
+        # try:
+        #     latest_time = self._tf_buffer.get_latest_common_time(output_frame_id, self._camera_info.header.frame_id)
+        # except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+        #     print('Could not get latest common time')
+        #     return None
 
         if output_frame_id not in [None, self._camera_info.header.frame_id]:
             output_transformation = self._tf_buffer.lookup_transform(
