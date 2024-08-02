@@ -4,10 +4,14 @@ import numpy as np
 import tf2_ros
 
 from geometry_msgs.msg import Transform
+from gyakuenki_interfaces.msg import ProjectedObjects
 from ninshiki_interfaces.msg import DetectedObject
 from rclpy.duration import Duration
-from sensor_msgs.msg import CameraInfo
+from rclpy.time import Time
+from sensor_msgs.msg import CameraInfo, PointCloud2, PointField
+from sensor_msgs.point_cloud2 import create_cloud
 from shape_msgs.msg import Plane
+from std_msgs.msg import Header
 from typing import Optional, Tuple
 from tf2_geometry_msgs import PointStamped
 from vision_msgs.msg import Point2D
@@ -240,3 +244,27 @@ def create_horizontal_plane(
     plane.coef[2] = 1.0  # Normal in z direction
     plane.coef[3] = -height_offset  # Distance above the ground
     return plane
+
+
+def create_pointcloud(projected_objects: ProjectedObjects, output_frame: str):
+    points_list = []
+    for obj in projected_objects.projected_objects:
+        points_list.append([obj.center.x, obj.center.y, obj.center.z])
+
+    points_on_plane = np.array(
+        points_list,
+        dtype=[('x', np.float32), ('y', np.float32), ('z', np.float32)]
+    )
+
+    fields = [
+        PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+        PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+        PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)
+    ]
+
+    header = Header()
+    header.stamp = Time.now()
+    header.frame_id = output_frame
+
+    pcl = create_cloud(header, fields, points_on_plane)
+    return pcl

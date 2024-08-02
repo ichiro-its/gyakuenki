@@ -59,4 +59,7 @@ def map_detected_objects(
 
         objects_relative.projected_objects.append(object_relative)
 
-    return objects_relative
+    pcl = utils.create_point_cloud(
+        objects_relative, base_footprint_frame)
+
+    return objects_relative, pcl
