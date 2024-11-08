@@ -9,6 +9,5 @@ install
 __pycache__
 *.pyc
 
-*.cfg
 *.names
 *.weights
