@@ -1,7 +1,6 @@
 import rclpy
 import tf2_ros as tf2
 from gyakuenki.projections.ipm import IPM
-from gyakuenki.projections.projections import map_detected_objects
 from gyakuenki.utils import utils
 from gyakuenki_interfaces.msg import ProjectedObjects
 from ninshiki_interfaces.msg import DetectedObjects, Contours
@@ -25,8 +24,8 @@ class GyakuenkiNode:
 
         self.dnn_objects_subscriber = self.node.create_subscription(
             DetectedObjects, self.node.get_parameter('detection_topic_dnn').value, self.dnn_detection_callback, 8)
-        self.color_objects_subscriber = self.node.create_subscription(Contours, self.node.get_parameter(
-            'detection_topic_color').value, self.color_detection_callback, 8)
+        # self.color_objects_subscriber = self.node.create_subscription(Contours, self.node.get_parameter(
+        #     'detection_topic_color').value, self.color_detection_callback, 8)
 
         self.projected_dnn_publisher = self.node.create_publisher(
             ProjectedObjects, self.node.get_name() + '/projected_dnn', 8)
@@ -44,24 +43,29 @@ class GyakuenkiNode:
             self.config, self.node.get_parameter('gaze_frame').value), node=self.node)
 
     def dnn_detection_callback(self, msg: DetectedObjects):
-        projected_objects, pcl = map_detected_objects(
-            msg.detected_objects,
-            'dnn',
-            self.ipm,
-            self.node.get_parameter('base_footprint_frame').value,
-            self.node.get_parameter('gaze_frame').value)
+        try:
+            projected_objects, pcl = self.ipm.map_detected_objects(
+                msg.detected_objects,
+                'dnn',
+                self.node.get_parameter('base_footprint_frame').value,
+                self.node.get_parameter('gaze_frame').value)
 
-        self.projected_dnn_publisher.publish(projected_objects)
-        self.projected_dnn_pointcloud_publisher.publish(pcl)
+            self.projected_dnn_publisher.publish(projected_objects)
+            self.projected_dnn_pointcloud_publisher.publish(pcl)
+        except Exception as e:
+            self.node.get_logger().error(
+                "DNN Error: {}".format(e))
 
     # Callback for color detection subscriber
     def color_detection_callback(self, msg: Contours):
-        projected_objects, pcl = map_detected_objects(
-            msg.contours,
-            'color',
-            self.ipm,
-            self.node.get_parameter('base_footprint_frame').value,
-            self.node.get_parameter('gaze_frame').value)
+        try:
+            projected_objects, pcl = self.ipm.map_detected_objects(
+                msg.contours,
+                'color',
+                self.node.get_parameter('base_footprint_frame').value,
+                self.node.get_parameter('gaze_frame').value)
 
-        self.projected_color_publisher.publish(projected_objects)
-        self.projected_color_pointcloud_publisher.publish(pcl)
+            self.projected_color_publisher.publish(projected_objects)
+            self.projected_color_pointcloud_publisher.publish(pcl)
+        except:
+            self.node.get_logger().error("Error in mapping color objects")
